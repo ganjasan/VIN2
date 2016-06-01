@@ -12,7 +12,7 @@ import android.os.Bundle;
  */
 public class NovelProvider extends SQLiteTableProvider {
 
-    public static final String TABLE_NAME = "novel";
+    public static final String TABLE_NAME = "Novel";
 
     public static final Uri URI = Uri.parse("content://" + AUTHORITY + "/" +TABLE_NAME);
 
@@ -60,9 +60,25 @@ public class NovelProvider extends SQLiteTableProvider {
         return c.getString(c.getColumnIndex(Columns.STATUS));
     }
 
+    public static String getSourceId(Cursor c){
+        return c.getString(c.getColumnIndex(Columns.SOURCE_ID));
+    }
+
+    public static boolean isFavorite(Cursor c){
+        return c.getInt(c.getColumnIndex(Columns.IS_FAVORITE)) == 1 ? true : false;
+    }
+
+    public static boolean isDaownloaded (Cursor c){
+        return c.getInt(c.getColumnIndex(Columns.IS_DOWNLOADED)) == 1 ? true : false;
+    }
+
     @Override
     public Uri getBaseUri() {
         return URI;
+    }
+
+    public static Uri getUriWithId(String id){
+        return Uri.parse("content://" + AUTHORITY + "/" + TABLE_NAME + "/" + id);
     }
 
 
@@ -80,6 +96,9 @@ public class NovelProvider extends SQLiteTableProvider {
                 + Columns.HREF + " text, "
                 + Columns.PAGE_TOTAL + " integer, "
                 + Columns.RATING + " integer, "
+                + Columns.SOURCE_ID + " text, "
+                + Columns.IS_DOWNLOADED + " integer,"
+                + Columns.IS_FAVORITE + " integer, "
                 + Columns.STATUS + " text );");
         db.execSQL("create index if not exists " +
             TABLE_NAME + "_" + Columns.OBJECT_ID + "_index" +
@@ -94,5 +113,8 @@ public class NovelProvider extends SQLiteTableProvider {
         String PAGE_TOTAL = "pageTotal";
         String RATING = "rating";
         String STATUS = "status";
+        String SOURCE_ID = "sourceId";
+        String IS_FAVORITE = "isFavorite";
+        String IS_DOWNLOADED = "isDownloaded";
     }
 }

@@ -18,6 +18,7 @@ public class PrefManager {
     public final static String PREF_LAST_UPDATE_DATE = "com.inuh.vin.prefmanager.pref_last_update_date";
     public final static String PREF_SELECTED_SOURCE = "com.inuh.vin.prefmanager.pref_selected_source";
     public final static String PREF_CHANGE_NOTIFICATION = "com.inuh.vin.prefmanager.pref_change_notification";
+    public final static String PREF_LAST_SOURCE_UPDATE = "com.inuh.vin.prefmanager.pref_last_source_update";
 
     private static PrefManager sInstance;
 
@@ -118,5 +119,19 @@ public class PrefManager {
     public Set<String> getSlectedSourceSet(){
         return PreferenceManager.getDefaultSharedPreferences(mContext).getStringSet(PREF_SELECTED_SOURCE, new HashSet<String>());
     }
+
+    public void selLastSourceUpdate(String sourceObjectId, long date){
+        PreferenceManager.getDefaultSharedPreferences(mContext)
+                .edit()
+                .putLong(PREF_LAST_SOURCE_UPDATE+sourceObjectId, date)
+                .commit();
+    }
+
+    public long getLastSourceUpdate(String sourceObjectId){
+        return PreferenceManager.getDefaultSharedPreferences(mContext).getLong(PREF_LAST_SOURCE_UPDATE+sourceObjectId, 0);
+    }
+
+
+
 
 }

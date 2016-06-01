@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.READ_SYNC_STATS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
 
     <application
         android:allowBackup="true"
@@ -47,7 +48,7 @@
 
         <provider
             android:name=".sqlite.SQLiteContentProvider"
-            android:authorities="com.inuh.vin"
+            android:authorities="com.inuh.vin.provider"
             android:exported="false"
             android:syncable="true" />
 

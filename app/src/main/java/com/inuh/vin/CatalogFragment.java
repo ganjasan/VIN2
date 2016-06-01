@@ -24,6 +24,7 @@ import android.widget.TextView;
 import com.inuh.vin.models.Novel;
 import com.inuh.vin.provider.DataProvider;
 import com.inuh.vin.provider.TableContracts;
+import com.inuh.vin.sqlite.NovelProvider;
 import com.inuh.vin.util.CursorRecyclerViewAdapter;
 import com.inuh.vin.util.PrefManager;
 import com.squareup.picasso.Picasso;
@@ -55,6 +56,7 @@ public class CatalogFragment extends Fragment implements LoaderManager.LoaderCal
 
         getActivity().getSupportLoaderManager().initLoader(0,null,this);
 
+        mRecyclerView.setAdapter(mAdapter);
 
         return view;
     }
@@ -140,6 +142,7 @@ public class CatalogFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         mAdapter.swapCursor(data);
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -158,7 +161,7 @@ public class CatalogFragment extends Fragment implements LoaderManager.LoaderCal
 
         @Override
         public Cursor loadInBackground() {
-            Cursor cursor = getContext().getContentResolver().query(TableContracts.TableNovel.CONTENT_URI,null,null,null,null);
+            Cursor cursor = getContext().getContentResolver().query(NovelProvider.URI,null,null,null,null);
             return cursor;
         }
 

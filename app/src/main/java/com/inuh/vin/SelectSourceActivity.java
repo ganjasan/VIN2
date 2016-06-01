@@ -1,5 +1,7 @@
 package com.inuh.vin;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -20,6 +22,8 @@ import com.inuh.vin.api.RestService;
 import com.inuh.vin.api.requests.SourceRequest;
 import com.inuh.vin.api.response.SourceResponse;
 import com.inuh.vin.models.Source;
+import com.inuh.vin.sqlite.SQLiteTableProvider;
+import com.inuh.vin.sync.SyncAdapter;
 import com.inuh.vin.util.PrefManager;
 import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.persistence.exception.SpiceException;
@@ -40,6 +44,8 @@ public class SelectSourceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_source);
+
+        setSyncAutomatically();
 
         mRecyclerView = (RecyclerView) findViewById(R.id.source_list);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -152,6 +158,12 @@ public class SelectSourceActivity extends AppCompatActivity {
         public int getItemCount() {
             return mSources.size();
         }
+    }
+
+    private void setSyncAutomatically(){
+        AccountManager am = AccountManager.get(this);
+        Account account = am.getAccountsByType("com.inuh.vin.account")[0];
+        getContentResolver().setSyncAutomatically(account, SQLiteTableProvider.AUTHORITY, true);
     }
 
 

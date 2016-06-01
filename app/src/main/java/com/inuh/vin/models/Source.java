@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.content.ContentValues;
 
 import com.inuh.vin.provider.TableContracts.TableSource;
+import com.inuh.vin.sqlite.SourceProvider.Columns;
 
 import java.io.Serializable;
 
@@ -16,11 +17,11 @@ public class Source extends Model implements Serializable {
     public ContentValues toContentValues() {
 
         ContentValues cv = new ContentValues();
-        cv.put(TableSource.OBJECT_ID, objectId);
-        cv.put(TableSource.UPDATED, updated);
-        cv.put(TableSource.CREATED, created);
-        cv.put(TableSource.NAME, name);
-        cv.put(TableSource.DESCRIPTION, description);
+        cv.put(Columns.OBJECT_ID, objectId);
+        cv.put(Columns.UPDATED, updated);
+        cv.put(Columns.CREATED, created);
+        cv.put(Columns.NAME, name);
+        cv.put(Columns.DESCRIPTION, description);
 
         return cv;
 

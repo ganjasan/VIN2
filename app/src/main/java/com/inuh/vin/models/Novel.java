@@ -2,9 +2,9 @@ package com.inuh.vin.models;
 
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.support.design.widget.TabLayout;
+import com.inuh.vin.sqlite.NovelProvider.Columns;
 
-import com.inuh.vin.provider.TableContracts.TableNovel;
+import com.inuh.vin.sqlite.SourceProvider;
 
 import java.io.Serializable;
 
@@ -19,40 +19,43 @@ public class Novel extends Model implements Serializable {
     private boolean isFavorite;
     private boolean isDownloaded;
     private int     pageTotal;
+    private String  sourceId;
 
 
     @Override
     public ContentValues toContentValues() {
         ContentValues cv = new ContentValues();
-        cv.put(TableNovel.OBJECT_ID, objectId);
-        cv.put(TableNovel.CREATED, created);
-        cv.put(TableNovel.UPDATED, updated);
-        cv.put(TableNovel.NAME, name);
-        cv.put(TableNovel.DESCRIPTION, description);
-        cv.put(TableNovel.RATING, rating);
-        cv.put(TableNovel.STATUS_ID, status);
-        cv.put(TableNovel.IMG_HREF, imgHref);
-        cv.put(TableNovel.IS_FAVORITE, isFavorite);
-        cv.put(TableNovel.IS_DOWNLOADED, isDownloaded);
+        cv.put(Columns.OBJECT_ID, objectId);
+        cv.put(Columns.CREATED, created);
+        cv.put(Columns.UPDATED, updated);
+        cv.put(Columns.NAME, name);
+        cv.put(Columns.DESCRIPTION, description);
+        cv.put(Columns.RATING, rating);
+        cv.put(Columns.STATUS, status);
+        cv.put(Columns.IMG_HREF, imgHref);
+        cv.put(Columns.IS_FAVORITE, isFavorite==true ? 1 : 0);
+        cv.put(Columns.IS_DOWNLOADED, isDownloaded == true ? 1 : 0);
+        cv.put(Columns.SOURCE_ID, sourceId);
         return cv;
     }
 
     public static Novel fromCursor(Cursor cursor){
         Novel newNovel = new Novel();
 
-        newNovel.set_id(cursor.getLong(cursor.getColumnIndex(TableNovel._ID)));
-        newNovel.setObjectId(cursor.getString(cursor.getColumnIndex(TableNovel.OBJECT_ID)));
-        newNovel.setUpdated(cursor.getLong(cursor.getColumnIndex(TableNovel.UPDATED)));
-        newNovel.setCreated(cursor.getLong(cursor.getColumnIndex(TableNovel.CREATED)));
-        newNovel.setName(cursor.getString(cursor.getColumnIndex(TableNovel.NAME)));
-        newNovel.setDescription(cursor.getString(cursor.getColumnIndex(TableNovel.DESCRIPTION)));
-        newNovel.setRating(cursor.getInt(cursor.getColumnIndex(TableNovel.RATING)));
-        newNovel.setStatus(cursor.getString(cursor.getColumnIndex(TableNovel.STATUS_ID)));
-        newNovel.setImgHref(cursor.getString(cursor.getColumnIndex(TableNovel.IMG_HREF)));
-        newNovel.setIsFavorite(cursor.getInt(cursor.getColumnIndex(TableNovel.IS_FAVORITE)) == 0
+        newNovel.set_id(cursor.getLong(cursor.getColumnIndex(Columns._ID)));
+        newNovel.setObjectId(cursor.getString(cursor.getColumnIndex(Columns.OBJECT_ID)));
+        newNovel.setUpdated(cursor.getLong(cursor.getColumnIndex(Columns.UPDATED)));
+        newNovel.setCreated(cursor.getLong(cursor.getColumnIndex(Columns.CREATED)));
+        newNovel.setName(cursor.getString(cursor.getColumnIndex(Columns.NAME)));
+        newNovel.setDescription(cursor.getString(cursor.getColumnIndex(Columns.DESCRIPTION)));
+        newNovel.setRating(cursor.getInt(cursor.getColumnIndex(Columns.RATING)));
+        newNovel.setStatus(cursor.getString(cursor.getColumnIndex(Columns.STATUS)));
+        newNovel.setImgHref(cursor.getString(cursor.getColumnIndex(Columns.IMG_HREF)));
+        newNovel.setIsFavorite(cursor.getInt(cursor.getColumnIndex(Columns.IS_FAVORITE)) == 0
                 ? false : true);
-        newNovel.setIsDownloaded(cursor.getInt(cursor.getColumnIndex(TableNovel.IS_DOWNLOADED))== 0
-                ? false : true );
+        newNovel.setIsDownloaded(cursor.getInt(cursor.getColumnIndex(Columns.IS_DOWNLOADED)) == 0
+                ? false : true);
+        newNovel.setSourceId(cursor.getString(cursor.getColumnIndex(Columns.SOURCE_ID)));
 
         return newNovel;
     }
@@ -119,5 +122,13 @@ public class Novel extends Model implements Serializable {
 
     public void setPageTotal(int pageTotal) {
         this.pageTotal = pageTotal;
+    }
+
+    public String getSourceId() {
+        return sourceId;
+    }
+
+    public void setSourceId(String sourceId) {
+        this.sourceId = sourceId;
     }
 }

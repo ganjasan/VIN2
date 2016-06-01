@@ -18,12 +18,10 @@ import android.text.TextUtils;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Created by artimus on 01.06.16.
- */
+
 public class SQLiteContentProvider extends ContentProvider {
 
-    private static final String DATABASE_NAME = "inuh_vin.db";
+    private static final String DATABASE_NAME = "inuhvin.db";
 
     private static final int DATABASE_VERSION = 1;
 

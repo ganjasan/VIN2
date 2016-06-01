@@ -9,11 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.widget.Toast;
 
-import com.inuh.vin.api.response.SourceResponse;
-import com.inuh.vin.api.rest.VinRest;
 import com.inuh.vin.provider.TableContracts;
+import com.inuh.vin.sqlite.SQLiteTableProvider;
 import com.inuh.vin.sync.SyncAdapter;
 import com.inuh.vin.util.PrefManager;
 
@@ -38,16 +36,28 @@ public class StartActivity extends Activity {
 
         mAccount = createSyncAccount(getApplicationContext());
 
-        long lastUpdate = PrefManager.getInstance(this).getLastUpdate();
-
-        if(lastUpdate == 0) {
+        if (PrefManager.getInstance(this).getSlectedSourceSet().isEmpty()) {
             Intent intent = new Intent(this, SelectSourceActivity.class);
             startActivityForResult(intent, SOURCE_SELECT_REQUEST_CODE);
-        }else{
-            final Bundle syncExtras = new Bundle();
-            syncExtras.putInt(SyncAdapter.EXTRA_SYNC_KEY, SyncAdapter.SYNC_ALL);
+        }else {
 
-            ContentResolver.requestSync(mAccount, AUTHORITY, syncExtras);
+            if (ContentResolver.getSyncAutomatically(mAccount, SQLiteTableProvider.AUTHORITY) == false ||
+                    ContentResolver.getMasterSyncAutomatically() == false) {
+
+                Intent catalogActivityStartIntent = new Intent(StartActivity.this, CatalogActivity.class);
+                startActivity(catalogActivityStartIntent);
+                finish();
+            } else {
+
+                long lastUpdate = PrefManager.getInstance(this).getLastUpdate();
+
+
+                final Bundle syncExtras = new Bundle();
+                syncExtras.putInt(SyncAdapter.EXTRA_SYNC_KEY, SyncAdapter.SYNC_ALL);
+
+                ContentResolver.requestSync(mAccount, AUTHORITY, syncExtras);
+
+            }
         }
 
         setContentView(R.layout.activity_start_layout);
@@ -93,7 +103,8 @@ public class StartActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             Intent catalogActivityStartIntent = new Intent(StartActivity.this, CatalogActivity.class);
             startActivity(catalogActivityStartIntent);
-
+            finish();
         }
     };
+
 }

@@ -12,7 +12,7 @@ import android.os.Bundle;
  */
 public class SourceProvider extends SQLiteTableProvider {
 
-    public static final String TABLE_NAME = "source";
+    public static final String TABLE_NAME = "Source";
 
     public static final Uri URI = Uri.parse("content://" + AUTHORITY + "/" +TABLE_NAME);
 
@@ -44,6 +44,10 @@ public class SourceProvider extends SQLiteTableProvider {
     @Override
     public Uri getBaseUri() {
         return URI;
+    }
+
+    public static Uri getUriWithId(String id){
+        return Uri.parse("content://" + AUTHORITY + "/" + TABLE_NAME + "/" + id);
     }
 
     @Override

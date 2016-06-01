@@ -7,9 +7,12 @@ import android.content.ContentProviderOperation;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.content.SyncResult;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.util.Log;
+
 import com.inuh.vin.api.response.NovelResponse;
 
 import com.inuh.vin.api.response.SourceResponse;
@@ -18,6 +21,10 @@ import com.inuh.vin.models.Novel;
 
 import com.inuh.vin.models.Source;
 import com.inuh.vin.provider.TableContracts;
+import com.inuh.vin.sqlite.NovelProvider;
+import com.inuh.vin.sqlite.SQLiteContentProvider;
+import com.inuh.vin.sqlite.SQLiteTableProvider;
+import com.inuh.vin.sqlite.SourceProvider;
 import com.inuh.vin.util.PrefManager;
 
 import java.util.ArrayList;
@@ -30,6 +37,8 @@ import retrofit.RetrofitError;
 
 
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
+
+    private static final String TAG = SyncAdapter.class.getSimpleName();
 
     public static final String SYNC_FINISH_BROADCAST = "com.inuh.vin.sync.sync_finish_broadcast";
 
@@ -60,8 +69,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         final int syncKey = extras.getInt(EXTRA_SYNC_KEY);
 
-        try {
-            switch (syncKey) {
+        switch (syncKey) {
+
                 case SYNC_ALL:
                     syncAll(provider);
                     break;
@@ -72,67 +81,87 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     break;
 
                 case SYNC_SOURCE_LIST:
-                    syncSourceList(provider, syncResult);
+                    syncSourceList(provider);
                     break;
 
                 default:
                     syncAll(provider);
-            }
+        }
+
+        getContext().sendBroadcast(new Intent(SYNC_FINISH_BROADCAST));
+
+    }
+
+    private void syncAll(ContentProviderClient provider){
+
+        syncSourceList(provider);
+        Set<String> sourceIdList = PrefManager.getInstance(getContext()).getSlectedSourceSet();
+
+        for (String sourceId : sourceIdList){
+            syncSource(sourceId, provider);
+        }
+    }
+
+    private void syncSourceList(ContentProviderClient provider) {
+
+        long lastUpdate = PrefManager.getInstance(getContext()).getLastUpdate();
+        String whereClause = "created>" + lastUpdate + " OR " + "updated>" + lastUpdate;
+
+        int offset = 0;
+        int totalCount;
+
+        ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
+
+        try {
+            do {
+                SourceResponse response = mService.getSources(offset, whereClause);
+                totalCount = response.getTotalObjects();
+
+                for (Source source : response.getData()) {
+
+                    if (lastUpdate < source.getCreated()) {
+                        // INSERT
+                        ContentValues cv = source.toContentValues();
+                        ops.add(ContentProviderOperation.newInsert(SourceProvider.URI)
+                                .withValues(cv)
+                                .build());
+
+                    } else if (lastUpdate < source.getUpdated()) {
+                        //UPDATE
+                        ContentValues cv = source.toContentValues();
+                        ops.add(ContentProviderOperation.newUpdate(SourceProvider.getUriWithId(source.getObjectId()))
+                                .build());
+                    }
+
+                    offset++;
+                }
+
+            } while (offset < totalCount);
+
+            provider.applyBatch(ops);
 
             PrefManager.getInstance(getContext()).setCurrentDateAsLastUpdate();
 
-        }catch (Exception e){
-           int a = 1;
-        }finally {
-            getContext().sendBroadcast(new Intent(SYNC_FINISH_BROADCAST));
+        }catch (RemoteException rex){
+            Log.e(TAG, "source list update error", rex);
+
+        }catch (OperationApplicationException oaex){
+            Log.e(TAG, "source list update error", oaex);
+
+        }catch (RetrofitError retrofitError){
+            Log.e(TAG, "source  list update error", retrofitError);
         }
-    }
-
-    private void syncAll(ContentProviderClient provider) throws Exception{
-
-
-        long lastUpdate = PrefManager.getInstance(getContext()).getLastUpdate();
-
-        try {
-
-            Collection<Source> sourceList = getSources(lastUpdate);
-            Set<String> selectedSource = PrefManager.getInstance(getContext()).getSlectedSourceSet();
-
-            for (Source source : sourceList) {
-                updateSource(source, lastUpdate, provider);
-                if (selectedSource.contains(source)) {
-                    syncSource(source.getObjectId(), provider);
-                }
-            }
-
-        } catch (Exception e) {
-            //Прервать синхронизацию
-            throw e;
-        }
-
-    }
-
-    private void syncSourceList(ContentProviderClient provider, SyncResult syncResult) {
-
-        long lastUpdate = PrefManager.getInstance(getContext()).getLastUpdate();
-        Collection<Source> sourceList = getSources(lastUpdate);
-
-        try {
-            for (Source source : sourceList) {
-                updateSource(source, lastUpdate, provider);
-            }
-        } catch (Exception e) {
-
-        }
-
     }
 
     private void syncSource(String sourceId, ContentProviderClient provider) {
 
-        long lastUpdate = PrefManager.getInstance(getContext()).getLastUpdate();
-        String whereClause = "Sources[novels].objectId = " + sourceId +
-                "AND (created > " + lastUpdate +
-                "OR updated > " + lastUpdate + ")";
+        long lastUpdate = PrefManager.getInstance(getContext()).getLastSourceUpdate(sourceId);
+
+        String whereClause = "Sources[novels].objectId = '" + sourceId + "'" +
+                " AND (created>" + lastUpdate +
+                " OR updated>" + lastUpdate + " )";
+
+        ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
 
         int offset = 0;
         int totalPageCount;
@@ -141,77 +170,45 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 NovelResponse response = mService.getNovels(offset, 50, whereClause, null);
                 totalPageCount = response.getTotalObjects();
 
-                for (Novel novel : response.getData()) {
-                    updateNovel(novel, lastUpdate, provider);
-                }
-                offset += 50;
+                Log.i("WAAAGH", "get response");
 
-            } while (offset < totalPageCount);
-        } catch (Exception e) {
 
-        }
+                for (Novel novel: response.getData()){
+                    if(lastUpdate < novel.getCreated()){
+                        //INSERT
+                        novel.setSourceId(sourceId);
+                        ContentValues cv = novel.toContentValues();
+                        ops.add(ContentProviderOperation.newInsert(NovelProvider.URI)
+                                    .withValues(cv)
+                                    .build());
 
-    }
+                    }else if(lastUpdate < novel.getUpdated()){
+                        //UPDATE
+                        novel.setSourceId(sourceId);
+                        ContentValues cv = novel.toContentValues();
+                        ops.add(ContentProviderOperation.newUpdate(NovelProvider.getUriWithId(novel.getObjectId()))
+                                .build());
+                    }
 
-    private Collection<Source> getSources(long lastUpdate) throws RetrofitError{
-
-        Collection<Source> sourceList = new ArrayList<>();
-
-        String whereClause = "created>" + lastUpdate + " OR updated>" + lastUpdate;
-
-        int offset = 0;
-        int totalPageCount;
-        String nextPage;
-        try {
-            do {
-                SourceResponse response = mService.getSources(offset, whereClause);
-                totalPageCount = response.getTotalObjects();
-
-                sourceList.addAll(response.getData());
-                nextPage = response.getNextPage();
-
-                if (nextPage == null) {
-                    offset = totalPageCount;
-                }else {
-                    offset = Integer.parseInt(nextPage);
+                    offset++;
                 }
 
             } while (offset < totalPageCount);
 
-            return sourceList;
-        }catch (RetrofitError error){
-            throw error;
-        }
-    }
+            provider.applyBatch(ops);
 
-    private void updateSource(Source source, long lastUpdate, ContentProviderClient provider) throws RemoteException {
+            PrefManager.getInstance(getContext()).selLastSourceUpdate(sourceId, System.currentTimeMillis());
 
-        if (source.getCreated() > lastUpdate) {
-            // INSERT
-            ContentValues cv = source.toContentValues();
-            provider.insert(TableContracts.TableSource.CONTENT_URI, cv);
-        } else if (source.getUpdated() > lastUpdate) {
-            //UPDATE
-            ContentValues cv = source.toContentValues();
-            provider.update(TableContracts.TableSource.CONTENT_URI, cv, TableContracts.TableSource.OBJECT_ID,
-                    new String[]{source.getObjectId()});
+        }catch (RemoteException rex){
+            Log.e(TAG, "source list update error", rex);
+
+        }catch (OperationApplicationException oaex){
+            Log.e(TAG, "source list update error", oaex);
+
+        }catch (RetrofitError retrofitError){
+            Log.e(TAG, "source  list update error", retrofitError);
         }
 
     }
-
-    private void updateNovel(Novel novel, long lastUpdate, ContentProviderClient provider) throws RemoteException {
-
-        if (novel.getCreated() > lastUpdate) {
-            ContentValues cv = novel.toContentValues();
-            provider.insert(TableContracts.TableNovel.CONTENT_URI, cv);
-        } else if (novel.getUpdated() > lastUpdate) {
-            ContentValues cv = novel.toContentValues();
-            provider.update(TableContracts.TableNovel.CONTENT_URI, cv, TableContracts.TableNovel.OBJECT_ID,
-                    new String[]{novel.getObjectId()});
-        }
-
-    }
-
-
 
 }

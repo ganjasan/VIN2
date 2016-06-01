@@ -13,7 +13,7 @@ public abstract class SQLiteTableProvider implements SQLiteOperation {
 
     private final String mName;
 
-    public static final String AUTHORITY = "con.inuh.vin";
+    public static final String AUTHORITY = "com.inuh.vin.provider";
 
     public SQLiteTableProvider(String name) {
         mName = name;
