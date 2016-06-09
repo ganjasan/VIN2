@@ -1,20 +1,31 @@
 package com.inuh.vin;
 
+import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.inuh.vin.sqlite.NovelProvider;
+import com.inuh.vin.sync.SyncAdapter;
+import com.inuh.vin.util.PrefManager;
+
 public class CatalogActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,7 +33,7 @@ public class CatalogActivity extends AppCompatActivity
         setContentView(R.layout.activity_catalog);
         setTitle(R.string.catalog_activity_title);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
+        setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -34,6 +45,20 @@ public class CatalogActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        mSwipeRefreshLayout = (SwipeRefreshLayout)findViewById(R.id.main_fragment_container);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+
+                mSwipeRefreshLayout.setRefreshing(true);
+
+                final Bundle syncExtras = new Bundle();
+                syncExtras.putInt(SyncAdapter.EXTRA_SYNC_KEY, SyncAdapter.SYNC_ALL);
+
+                ContentResolver.requestSync(PrefManager.getInstance(getApplicationContext()).getBaseAccount(),
+                            NovelProvider.AUTHORITY, syncExtras);
+                }
+            });
 
         FragmentManager fm = getSupportFragmentManager();
         Fragment fragment = fm.findFragmentById(R.id.main_fragment_container);
@@ -47,6 +72,26 @@ public class CatalogActivity extends AppCompatActivity
 
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        IntentFilter filter = new IntentFilter(SyncAdapter.SYNC_FINISH_BROADCAST);
+        registerReceiver(mOnSyncFinish, filter);
+    }
+
+    private BroadcastReceiver mOnSyncFinish = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            mSwipeRefreshLayout.setRefreshing(false);
+        }
+    };
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(mOnSyncFinish);
+    }
 
     @Override
     public void onBackPressed() {

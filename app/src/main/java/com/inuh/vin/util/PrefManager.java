@@ -1,5 +1,6 @@
 package com.inuh.vin.util;
 
+import android.accounts.Account;
 import android.content.Context;
 import android.content.Intent;
 import android.preference.PreferenceManager;
@@ -19,6 +20,9 @@ public class PrefManager {
     public final static String PREF_SELECTED_SOURCE = "com.inuh.vin.prefmanager.pref_selected_source";
     public final static String PREF_CHANGE_NOTIFICATION = "com.inuh.vin.prefmanager.pref_change_notification";
     public final static String PREF_LAST_SOURCE_UPDATE = "com.inuh.vin.prefmanager.pref_last_source_update";
+
+    private final static  String ACCOUNT = "base_account";
+    private final static String ACCOUNT_TYPE = "com.inuh.vin.account";
 
     private static PrefManager sInstance;
 
@@ -129,6 +133,11 @@ public class PrefManager {
 
     public long getLastSourceUpdate(String sourceObjectId){
         return PreferenceManager.getDefaultSharedPreferences(mContext).getLong(PREF_LAST_SOURCE_UPDATE+sourceObjectId, 0);
+    }
+
+    public Account getBaseAccount(){
+        Account newAccount = new Account(ACCOUNT, ACCOUNT_TYPE);
+        return newAccount;
     }
 
 

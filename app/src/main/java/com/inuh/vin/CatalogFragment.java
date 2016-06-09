@@ -1,17 +1,25 @@
 package com.inuh.vin;
 
 
+import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.Image;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -23,8 +31,9 @@ import android.widget.TextView;
 
 import com.inuh.vin.models.Novel;
 import com.inuh.vin.provider.DataProvider;
-import com.inuh.vin.provider.TableContracts;
 import com.inuh.vin.sqlite.NovelProvider;
+import com.inuh.vin.sqlite.SQLiteContentProvider;
+import com.inuh.vin.sync.SyncAdapter;
 import com.inuh.vin.util.CursorRecyclerViewAdapter;
 import com.inuh.vin.util.PrefManager;
 import com.squareup.picasso.Picasso;
@@ -36,25 +45,36 @@ import java.util.List;
  */
 public class CatalogFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    public static final String EXTRA_CATALOG_FRAGMENT = "com.inuh.vin.extra_catalog_fragment";
+    public static final String EXTRA_DOWNLOAD_FRAGMENT = "com.inuh.vin.extra_download_fragment";
+    public static final String EXTRA_FAVORITE_FRAGMENT = "com.inuh.vin.extra_favorite_fragment";
+
     private DataProvider mDataProvider;
 
     private NovelRecyclerCursorAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
+    private String mSelection;
+    private String[] mSelectionArgs;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.catalog_fragment_layout, container, false);
 
+        setSelection();
+
         mDataProvider = new DataProvider();
         mRecyclerView = (RecyclerView)view.findViewById(R.id.catalog_list);
-        mAdapter = new NovelRecyclerCursorAdapter(getActivity(), null);
+
+        mAdapter = new NovelRecyclerCursorAdapter(getContext(), null);
         mLinearLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
 
-        getActivity().getSupportLoaderManager().initLoader(0,null,this);
+
+        getActivity().getSupportLoaderManager().initLoader(0, null,this);
 
         mRecyclerView.setAdapter(mAdapter);
 
@@ -66,8 +86,7 @@ public class CatalogFragment extends Fragment implements LoaderManager.LoaderCal
         private Novel mNovel;
         private TextView mNameTextView;
         private ImageView mImageView;
-        private ImageButton mFavoriteButton;
-        private ImageButton mDownloadButton;
+        private ImageButton mActionButton;
 
         public NovelHolder(View itemView){
             super(itemView);
@@ -75,22 +94,26 @@ public class CatalogFragment extends Fragment implements LoaderManager.LoaderCal
             mNameTextView = (TextView)itemView.findViewById(R.id.novel_name);
             mImageView = (ImageView)itemView.findViewById(R.id.novel_image);
 
-            mFavoriteButton = (ImageButton)itemView.findViewById(R.id.favorite_button);
-            mFavoriteButton.setOnClickListener(new View.OnClickListener() {
+            mActionButton = (ImageButton) itemView.findViewById(R.id.novel_action_button);
+
+            mActionButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    if(getActivity().getLocalClassName() == "DownloadActivity"){
+                        //delete action
+                    }else if(!mNovel.isFavorite()){
+                        mNovel.setIsFavorite(true);
+                        mActionButton.setBackground(ContextCompat.getDrawable(getActivity(), R.mipmap.download));
+                        updateNovel(mNovel);
+                    }else if(mNovel.isFavorite() && !mNovel.isDownloaded()){
+                        mNovel.setIsDownloaded(true);
+                        updateNovel(mNovel);
+                        mActionButton.setVisibility(View.INVISIBLE);
+                    }
 
                 }
             });
 
-            mDownloadButton = (ImageButton)itemView.findViewById(R.id.download_button);
-            mDownloadButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-
-                }
-            });
         }
 
         public void bindHolder(Novel novel){
@@ -100,6 +123,22 @@ public class CatalogFragment extends Fragment implements LoaderManager.LoaderCal
                     .load(novel.getImgHref())
                     .placeholder(mImageView.getDrawable())
                     .into(mImageView);
+
+            mActionButton.setVisibility(View.VISIBLE);
+
+            if (getActivity().getLocalClassName().equals("DownloadActivity")){
+                mActionButton.setBackground(ContextCompat.getDrawable(getActivity(), R.mipmap.close));
+
+            }else if(!mNovel.isFavorite()){
+                mActionButton.setBackground(ContextCompat.getDrawable(getActivity(), R.mipmap.star_outline));
+
+            }else if(mNovel.isFavorite() && !mNovel.isDownloaded()){
+                mActionButton.setBackground(ContextCompat.getDrawable(getActivity(), R.mipmap.download));
+
+            }else if(mNovel.isFavorite() && mNovel.isDownloaded()){
+                mActionButton.setVisibility(View.INVISIBLE);
+
+            }
 
         }
 
@@ -121,7 +160,7 @@ public class CatalogFragment extends Fragment implements LoaderManager.LoaderCal
         @Override
         public NovelHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-            View view = layoutInflater.inflate(R.layout.novel_item_layout, parent, false);
+            View view = layoutInflater.inflate(R.layout.novel_card_layout, parent, false);
             return new NovelHolder(view);
         }
 
@@ -132,37 +171,57 @@ public class CatalogFragment extends Fragment implements LoaderManager.LoaderCal
         }
     }
 
-
-
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new NovelCursorLoader(getContext(), mDataProvider);
+
+        return new CursorLoader(getContext(), NovelProvider.URI, null, mSelection, mSelectionArgs, null);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         mAdapter.swapCursor(data);
-        mAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-
+        mAdapter.swapCursor(null);
     }
 
-    static class NovelCursorLoader extends CursorLoader {
 
-        DataProvider provider;
+    private void updateNovel(Novel novel){
+        ContentValues cv = novel.toContentValues();
+        Uri uri = NovelProvider.getUriWithId(novel.getObjectId());
+        getContext().getContentResolver().update(uri, cv, null, null);
+    }
 
-        public NovelCursorLoader(Context context, DataProvider provider) {
-            super(context);
-            this.provider = provider;
-        }
+    private void setSelection(){
 
-        @Override
-        public Cursor loadInBackground() {
-            Cursor cursor = getContext().getContentResolver().query(NovelProvider.URI,null,null,null,null);
-            return cursor;
+        String activityName = getActivity().getLocalClassName();
+
+        switch (activityName){
+            case "CatalogActivity":
+                mSelection = null;
+                mSelectionArgs = null;
+                break;
+
+            case "DownloadActivity":
+                mSelection = NovelProvider.Columns.IS_DOWNLOADED + "=?";
+                mSelectionArgs = new String[]{"1"};
+
+                break;
+
+            case "FavoritesActivity":
+
+                mSelection = NovelProvider.Columns.IS_FAVORITE + "=?";
+                mSelectionArgs = new String[]{"1"};
+
+                break;
+
+            default:
+                mSelection = null;
+                mSelectionArgs = null;
+
+                break;
         }
 
     }

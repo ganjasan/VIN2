@@ -162,7 +162,7 @@ public class SQLiteContentProvider extends ContentProvider {
             throw new SQLiteException("No such table " + tableName);
         }
         if (matchResult == SQLiteUriMatcher.MATCH_ID) {
-            where = BaseColumns._ID + "=?";
+            where = BackendColumns.OBJECT_ID + "=?";
             whereArgs = new String[]{uri.getLastPathSegment()};
         }
         return updateInternal(tableProvider.getBaseUri(), tableProvider, values, where, whereArgs);

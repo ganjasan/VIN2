@@ -6,58 +6,55 @@
                 android:paddingTop="6dp"
                 android:paddingBottom="6dp"
                 android:layout_marginBottom="12dp"
-                android:background="@drawable/item_rect">
+                android:background="@drawable/item_rect"/>
 
-    <ImageView
-        android:id="@+id/novel_image"
-        android:layout_alignParentLeft="true"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingLeft="8dp"
-        android:layout_centerHorizontal="true"/>
-
-
-    <ImageButton
-        android:id="@+id/download_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_toLeftOf="@id/novel_image"
-        android:layout_centerVertical="true"
-        android:background="@mipmap/download"
-        android:paddingRight="8dp"
-
-        />
+    <!--<ImageView-->
+        <!--android:id="@+id/novel_image"-->
+        <!--android:layout_alignParentLeft="true"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:paddingLeft="8dp"-->
+        <!--android:layout_centerHorizontal="true"/>-->
 
 
-    <ImageButton
-        android:id="@+id/favorite_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_toLeftOf="@id/novel_image"
-        android:layout_centerVertical="true"
-        android:background="@mipmap/star_outline"
-        android:paddingRight="8dp"
-        />
+    <!--<ImageButton-->
+        <!--android:id="@+id/download_button"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignParentRight="true"-->
+        <!--android:layout_toLeftOf="@id/novel_image"-->
+        <!--android:layout_centerVertical="true"-->
+        <!--android:background="@mipmap/download"-->
+        <!--android:paddingRight="8dp"-->
+
+        <!--/>-->
 
 
+    <!--<ImageButton-->
+        <!--android:id="@+id/favorite_button"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignParentRight="true"-->
+        <!--android:layout_toLeftOf="@id/novel_image"-->
+        <!--android:layout_centerVertical="true"-->
+        <!--android:background="@mipmap/star_outline"-->
+        <!--android:paddingRight="8dp"-->
+        <!--/>-->
 
 
 
-    <TextView
-        android:id="@+id/novel_name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_toLeftOf="@id/favorite_button"
-        android:layout_toRightOf="@id/novel_image"
-        android:textStyle="bold"
-        android:layout_centerHorizontal="true"
-        android:paddingLeft="4dp"/>
+
+
+    <!--<TextView-->
+        <!--android:id="@+id/novel_name"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_toLeftOf="@id/favorite_button"-->
+        <!--android:layout_toRightOf="@id/novel_image"-->
+        <!--android:textStyle="bold"-->
+        <!--android:layout_centerHorizontal="true"-->
+        <!--android:paddingLeft="4dp"/>-->
 
 
 
-</RelativeLayout>
-
-
-  
+<!--</RelativeLayout>-->

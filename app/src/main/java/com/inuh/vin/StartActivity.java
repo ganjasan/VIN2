@@ -49,9 +49,6 @@ public class StartActivity extends Activity {
                 finish();
             } else {
 
-                long lastUpdate = PrefManager.getInstance(this).getLastUpdate();
-
-
                 final Bundle syncExtras = new Bundle();
                 syncExtras.putInt(SyncAdapter.EXTRA_SYNC_KEY, SyncAdapter.SYNC_ALL);
 

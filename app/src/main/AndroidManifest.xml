@@ -65,9 +65,20 @@
             android:theme="@style/AppTheme.NoActionBar" >
         </activity>
 
-        <activity android:name=".CatalogActivity">
+        <activity android:name=".CatalogActivity"
+                  android:theme="@style/AppTheme.NoActionBar"
+            android:label="@string/catalog_activity_title">
 
         </activity>
+
+        <activity android:name=".FavoritesActivity">
+
+        </activity>
+
+        <activity android:name=".DownloadActivity">
+
+        </activity>
+
     </application>
 
 </manifest>
