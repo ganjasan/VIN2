@@ -3,7 +3,6 @@ package com.inuh.vin.models;
 import android.app.ActionBar;
 import android.content.ContentValues;
 
-import com.inuh.vin.provider.TableContracts.TableSource;
 import com.inuh.vin.sqlite.SourceProvider.Columns;
 
 import java.io.Serializable;

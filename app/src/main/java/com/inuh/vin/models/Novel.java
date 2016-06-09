@@ -36,6 +36,7 @@ public class Novel extends Model implements Serializable {
         cv.put(Columns.IS_FAVORITE, isFavorite==true ? 1 : 0);
         cv.put(Columns.IS_DOWNLOADED, isDownloaded == true ? 1 : 0);
         cv.put(Columns.SOURCE_ID, sourceId);
+        cv.put(Columns.PAGE_TOTAL, pageTotal);
         return cv;
     }
 
@@ -56,6 +57,7 @@ public class Novel extends Model implements Serializable {
         newNovel.setIsDownloaded(cursor.getInt(cursor.getColumnIndex(Columns.IS_DOWNLOADED)) == 0
                 ? false : true);
         newNovel.setSourceId(cursor.getString(cursor.getColumnIndex(Columns.SOURCE_ID)));
+        newNovel.setPageTotal(cursor.getInt(cursor.getColumnIndex(Columns.PAGE_TOTAL)));
 
         return newNovel;
     }

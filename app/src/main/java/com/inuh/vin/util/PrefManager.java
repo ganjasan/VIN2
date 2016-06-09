@@ -132,12 +132,23 @@ public class PrefManager {
     }
 
     public long getLastSourceUpdate(String sourceObjectId){
-        return PreferenceManager.getDefaultSharedPreferences(mContext).getLong(PREF_LAST_SOURCE_UPDATE+sourceObjectId, 0);
+        return PreferenceManager.getDefaultSharedPreferences(mContext).getLong(PREF_LAST_SOURCE_UPDATE + sourceObjectId, 0);
     }
 
     public Account getBaseAccount(){
         Account newAccount = new Account(ACCOUNT, ACCOUNT_TYPE);
         return newAccount;
+    }
+
+    public void setNovelsLastPage(int number, String novelsId){
+        PreferenceManager.getDefaultSharedPreferences(mContext)
+                .edit()
+                .putInt(novelsId, number)
+                .commit();
+    }
+
+    public int getNovelsLastPage(String novelsId){
+        return PreferenceManager.getDefaultSharedPreferences(mContext).getInt(novelsId, 1);
     }
 
 

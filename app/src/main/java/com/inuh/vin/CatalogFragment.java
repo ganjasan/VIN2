@@ -30,7 +30,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.inuh.vin.models.Novel;
-import com.inuh.vin.provider.DataProvider;
 import com.inuh.vin.sqlite.NovelProvider;
 import com.inuh.vin.sqlite.SQLiteContentProvider;
 import com.inuh.vin.sync.SyncAdapter;
@@ -49,8 +48,6 @@ public class CatalogFragment extends Fragment implements LoaderManager.LoaderCal
     public static final String EXTRA_DOWNLOAD_FRAGMENT = "com.inuh.vin.extra_download_fragment";
     public static final String EXTRA_FAVORITE_FRAGMENT = "com.inuh.vin.extra_favorite_fragment";
 
-    private DataProvider mDataProvider;
-
     private NovelRecyclerCursorAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
@@ -66,7 +63,7 @@ public class CatalogFragment extends Fragment implements LoaderManager.LoaderCal
 
         setSelection();
 
-        mDataProvider = new DataProvider();
+
         mRecyclerView = (RecyclerView)view.findViewById(R.id.catalog_list);
 
         mAdapter = new NovelRecyclerCursorAdapter(getContext(), null);

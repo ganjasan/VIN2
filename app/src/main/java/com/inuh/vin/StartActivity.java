@@ -10,7 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 
-import com.inuh.vin.provider.TableContracts;
+import com.inuh.vin.sqlite.NovelProvider;
 import com.inuh.vin.sqlite.SQLiteTableProvider;
 import com.inuh.vin.sync.SyncAdapter;
 import com.inuh.vin.util.PrefManager;
@@ -20,7 +20,7 @@ import retrofit.RestAdapter;
 
 public class StartActivity extends Activity {
 
-    public static final String AUTHORITY = TableContracts.AUTHORITY;
+    public static final String AUTHORITY = SQLiteTableProvider.AUTHORITY;
     public static final String ACCOUNT_TYPE = "com.inuh.vin.account";
     public static final String ACCOUNT = "base_account";
 

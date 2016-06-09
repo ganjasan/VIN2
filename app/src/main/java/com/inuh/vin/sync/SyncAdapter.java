@@ -20,7 +20,6 @@ import com.inuh.vin.api.rest.VinRest;
 import com.inuh.vin.models.Novel;
 
 import com.inuh.vin.models.Source;
-import com.inuh.vin.provider.TableContracts;
 import com.inuh.vin.sqlite.NovelProvider;
 import com.inuh.vin.sqlite.SQLiteContentProvider;
 import com.inuh.vin.sqlite.SQLiteTableProvider;
@@ -170,8 +169,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 NovelResponse response = mService.getNovels(offset, 50, whereClause, null);
                 totalPageCount = response.getTotalObjects();
 
-                Log.i("WAAAGH", "get response");
-
 
                 for (Novel novel: response.getData()){
                     if(lastUpdate < novel.getCreated()){
@@ -187,6 +184,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         novel.setSourceId(sourceId);
                         ContentValues cv = novel.toContentValues();
                         ops.add(ContentProviderOperation.newUpdate(NovelProvider.getUriWithId(novel.getObjectId()))
+                                .withValues(cv)
                                 .build());
                     }
 

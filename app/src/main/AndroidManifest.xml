@@ -79,6 +79,10 @@
 
         </activity>
 
+        <activity android:name=".ReaderActivity">
+
+        </activity>
+
     </application>
 
 </manifest>
